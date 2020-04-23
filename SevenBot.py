@@ -26,8 +26,8 @@ async def on_ready():
     message_info = json.load(f)
 
     for msg in message_info["scheduled_messages"]:
-        scheduler.add_job(lambda: sendMessage(msg["channel_id"], msg["message_body"]),
-                          'cron', day_of_week=msg["day_of_week"], hour=msg["hour"], minute=msg["minute"])
+        scheduler.add_job(sendMessage, 'cron', args=[
+                          msg["channel_id"], msg["message_body"]], day_of_week=msg["day_of_week"], hour=msg["hour"], minute=msg["minute"])
 
     f.close()
 
