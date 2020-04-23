@@ -3,32 +3,29 @@
 import os
 import discord
 from dotenv import load_dotenv
-from apscheduler.schedulers.background import BackgroundScheduler
-# import datetime
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 load_dotenv()
-os.environ['TZ'] = 'America/Los_Angeles'
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = os.getenv("DISCORD_GUILD")
-# LOCAL_TIMEZONE = datetime.datetime.now(
-#     datetime.timezone(datetime.timedelta(0))).astimezone().tzinfo
-
-client = discord.Client()
-scheduler = BackgroundScheduler()
+CHANNEL = os.getenv("DISCORD_CHANNEL")
 general = None
 
-def testMessage():
-    global general
-    general.send("test")
 
-async def sendMsg(message_text):
+async def testMessage():
+    global general
     await general.send("test")
+
+
+client = discord.Client()
+scheduler = AsyncIOScheduler()
+scheduler.add_job(testMessage, 'interval', seconds=10, id="testID")
+
 
 @client.event
 async def on_ready():
     global general
-    general = await client.fetch_channel("357933471382896642")
-    scheduler.add_job(testMessage, 'interval', seconds=10, id="testID")
+    general = await client.fetch_channel(CHANNEL)
     scheduler.start()
 
     guild = discord.utils.get(client.guilds, name=GUILD)
