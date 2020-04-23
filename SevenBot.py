@@ -19,7 +19,7 @@ async def testMessage():
 
 client = discord.Client()
 scheduler = AsyncIOScheduler()
-scheduler.add_job(testMessage, 'interval', seconds=10, id="testID")
+scheduler.add_job(testMessage, 'cron', day_of_week="thu", hour=15, minute=6, id="testID")
 
 
 @client.event
