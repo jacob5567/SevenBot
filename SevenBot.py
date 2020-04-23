@@ -19,6 +19,13 @@ async def on_ready():
         f'{guild.name} (id: {guild.id})'
     )
 
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
 
+    if message.content == "hello":
+        response = "there!"
+        await message.channel.send(response)
 
 client.run(TOKEN)
