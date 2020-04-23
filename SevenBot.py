@@ -13,7 +13,8 @@ CHANNEL = os.getenv("DISCORD_CHANNEL")
 
 
 async def sendMessage(channel_id, message_body):
-    await client.fetch_channel(channel_id).send(message_body)
+    channel = await client.fetch_channel(channel_id)
+    await channel.send(message_body)
 
 
 client = discord.Client()
