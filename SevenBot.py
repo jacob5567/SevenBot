@@ -9,23 +9,19 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = os.getenv("DISCORD_GUILD")
 CHANNEL = os.getenv("DISCORD_CHANNEL")
-general = None
 
 
-async def testMessage():
-    global general
-    await general.send("test")
+async def sendMessage(channel_id, message_body):
+    await client.fetch_channel(channel_id).send(message_body)
 
 
 client = discord.Client()
 scheduler = AsyncIOScheduler()
-scheduler.add_job(testMessage, 'cron', day_of_week="thu", hour=15, minute=6, id="testID")
+scheduler.add_job(sendMessage, 'cron', day_of_week="mon", hour=10)
 
 
 @client.event
 async def on_ready():
-    global general
-    general = await client.fetch_channel(CHANNEL)
     scheduler.start()
 
     guild = discord.utils.get(client.guilds, name=GUILD)
