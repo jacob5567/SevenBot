@@ -4,6 +4,7 @@ import os
 import discord
 from discord.ext import commands
 import json
+import requests
 from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -11,6 +12,7 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = os.getenv("DISCORD_GUILD")
 CHANNEL = os.getenv("DISCORD_CHANNEL")
+BIBLE_API_KEY = os.getenv("BIBLE_API_KEY")
 
 
 async def sendMessage(channel_id, message_body):
@@ -18,7 +20,6 @@ async def sendMessage(channel_id, message_body):
     await channel.send(message_body)
 
 
-# client = discord.Client()
 bot = commands.Bot(command_prefix='!')
 scheduler = AsyncIOScheduler()
 
@@ -42,9 +43,15 @@ async def on_ready():
         f'{guild.name} (id: {guild.id})'
     )
 
+
 @bot.command(name="verse", help="Responds with the selected Bible verse")
 async def get_verse(ctx):
     await ctx.send("I'm sending a verse!")
+    url = "http://api.scripture.api.bible/v1/bibles/asv/chapters/job/verses"
+    headers = {"api-key": BIBLE_API_KEY}
+    response = requests.request("GET", url, headers=headers)
+    await ctx.send(response.text)
+
 
 @bot.event
 async def on_message(message):
