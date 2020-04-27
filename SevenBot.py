@@ -1,6 +1,7 @@
 # SevenBot.py
 
 import os
+import io
 import discord
 from discord.ext import commands
 import json
@@ -18,21 +19,13 @@ async def sendMessage(channel_id, message_body):
     await channel.send(message_body)
 
 
-# client = discord.Client()
 bot = commands.Bot(command_prefix='!')
 scheduler = AsyncIOScheduler()
 
 
 @bot.event
 async def on_ready():
-    f = open("messageinfo.json")
-    message_info = json.load(f)
-
-    for msg in message_info["scheduled_messages"]:
-        scheduler.add_job(sendMessage, 'cron', args=[
-                          msg["channel_id"], msg["message_body"]], day_of_week=msg["day_of_week"], hour=msg["hour"], minute=msg["minute"])
-
-    f.close()
+    await refresh_scheduled_messages()
 
     scheduler.start()
 
@@ -42,9 +35,40 @@ async def on_ready():
         f'{guild.name} (id: {guild.id})'
     )
 
+
+@bot.command(name="refresh", help="Refreshes all scheduled messages")
+@commands.has_role("Bot Admin")
+async def refresh(ctx):
+    await refresh_scheduled_messages()
+    await ctx.send("Schedule log refreshed!")
+
+
+@bot.command(name="listschedule", help="Lists all scheduled messages")
+@commands.has_role("Bot Admin")
+async def listschedule(ctx):
+    f = io.StringIO()
+    scheduler.print_jobs(out=f)
+    f.seek(0)
+    await ctx.send(f.read())
+    f.close()
+
+
+async def refresh_scheduled_messages():
+    scheduler.remove_all_jobs()
+    f = open("messageinfo.json")
+    message_info = json.load(f)
+
+    for msg in message_info["scheduled_messages"]:
+        scheduler.add_job(sendMessage, 'cron', args=[
+                          msg["channel_id"], msg["message_body"]], day_of_week=msg["day_of_week"], hour=msg["hour"], minute=msg["minute"])
+
+    f.close()
+
+
 @bot.command(name="verse", help="Responds with the selected Bible verse")
 async def get_verse(ctx):
     await ctx.send("Not yet implemented.")
+
 
 @bot.event
 async def on_message(message):
