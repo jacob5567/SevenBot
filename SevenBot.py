@@ -27,7 +27,7 @@ async def sendMessage(channel_id, message_body):
 async def sendRandomThemeMessage():
     global random_message
     channel = await bot.fetch_channel(RANDOM_CHANNEL)
-    await channel.send(RANDOM_TEXT + "* " + random.choice(RANDOM_TOPICS) if random_message == None else random_message + "*")
+    await channel.send(RANDOM_TEXT + " *" + (random.choice(RANDOM_TOPICS) if random_message == None else random_message) + "*")
     random_message = None
 
 bot = commands.Bot(command_prefix='!')
