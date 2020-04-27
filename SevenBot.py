@@ -2,6 +2,7 @@
 
 import os
 import discord
+from discord.ext import commands
 import json
 from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -13,15 +14,16 @@ CHANNEL = os.getenv("DISCORD_CHANNEL")
 
 
 async def sendMessage(channel_id, message_body):
-    channel = await client.fetch_channel(channel_id)
+    channel = await bot.fetch_channel(channel_id)
     await channel.send(message_body)
 
 
-client = discord.Client()
+# client = discord.Client()
+bot = commands.Bot(command_prefix='!')
 scheduler = AsyncIOScheduler()
 
 
-@client.event
+@bot.event
 async def on_ready():
     f = open("messageinfo.json")
     message_info = json.load(f)
@@ -34,21 +36,26 @@ async def on_ready():
 
     scheduler.start()
 
-    guild = discord.utils.get(client.guilds, name=GUILD)
+    guild = discord.utils.get(bot.guilds, name=GUILD)
     print(
-        f'{client.user} is connected to the following guild:\n'
+        f'{bot.user} is connected to the following guild:\n'
         f'{guild.name} (id: {guild.id})'
     )
 
+@bot.command(name="verse", help="Responds with the selected Bible verse")
+async def get_verse(ctx):
+    await ctx.send("I'm sending a verse!")
 
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
     if "hello there" in message.content.lower():
         response = "General Kenobi!"
         await message.channel.send(response)
 
+    await bot.process_commands(message)
 
-client.run(TOKEN)
+
+bot.run(TOKEN)
