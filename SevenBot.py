@@ -42,12 +42,14 @@ async def refresh(ctx):
     await refresh_scheduled_messages()
     await ctx.send("Schedule log refreshed!")
 
+
 @bot.command(name="listschedule", help="Lists all scheduled messages")
 @commands.has_role("Bot Admin")
 async def listschedule(ctx):
     f = io.StringIO()
-    scheduler.print_jobs(out=f)
+    scheduler.print_jobs(out=f)  # TODO: Fix output so human-readable
     await ctx.send(f.readlines())
+
 
 async def refresh_scheduled_messages():
     scheduler.remove_all_jobs()
