@@ -47,8 +47,10 @@ async def refresh(ctx):
 @commands.has_role("Bot Admin")
 async def listschedule(ctx):
     f = io.StringIO()
-    scheduler.print_jobs(out=f)  # TODO: Fix output so human-readable
-    await ctx.send(f.readlines())
+    scheduler.print_jobs(out=f)
+    f.seek(0)
+    await ctx.send(f.read())
+    f.close()
 
 
 async def refresh_scheduled_messages():
