@@ -44,7 +44,7 @@ async def on_ready():
 
 @bot.command(name="verse", help="Responds with the selected Bible verse")
 async def get_verse(ctx):
-    await ctx.send("I'm sending a verse!")
+    await ctx.send("Not yet implemented.")
 
 @bot.event
 async def on_message(message):
