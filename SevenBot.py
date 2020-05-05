@@ -115,6 +115,13 @@ async def refresh_scheduled_messages():
 async def get_verse(ctx):
     await ctx.send("Not yet implemented.")
 
+@bot.command(name="repository", help="The code repository for this bot")
+async def get_repo_link(ctx):
+    await ctx.send("https://github.com/jacob5567/SevenBot")
+
+@bot.command(name="musicmonday", help="Spotify playlist of Music Monday songs")
+async def get_monday_playlist(ctx):
+    await ctx.send("https://open.spotify.com/playlist/1N4lnBTUPDlsUhgnob2vxq?si=ZVWLYto5S8q6Y6Ex-1NyMw")
 
 @bot.event
 async def on_message(message):
