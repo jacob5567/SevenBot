@@ -123,19 +123,32 @@ async def refresh_scheduled_messages():
 
 
 @bot.command(name="settimezone", help="Set your personal time zone")
-async def set_time_zone(ctx, zone):
+async def set_time_zone(ctx, user_zone):
     try:
-        _ = pytz.timezone(zone)
+        _ = pytz.timezone(user_zone)
     except:
-        await ctx.send("`{}` is not a valid time zone".format(zone))
+        await ctx.send("`{}` is not a valid time zone".format(user_zone))
     else:
-        time_zones[ctx.author] = zone
-        await ctx.send("{}'s time zone set to `{}`".format(ctx.author, zone))
+        time_zones[ctx.author] = pytz.timezone(user_zone)
+        await ctx.send("{}'s time zone set to `{}`".format(ctx.author, user_zone))
 
 
-@bot.command(name="listtimezones", help="List all time zones")
+@bot.command(name="timezones", help="List all time zones")
 async def list_zones(ctx):
     await ctx.send("https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
+
+@bot.command(name="listuserzones", help="List all the users and their time zones, if set")
+async def list_user_zones(ctx):
+    send_string = ""
+    for key, value in time_zones.items():
+        send_string += str(key.name)
+        send_string += '#'
+        send_string += str(key.discriminator)
+        send_string += ': '
+        send_string += str(value.zone)
+        send_string += '\n'
+    if(send_string):
+        await ctx.send(send_string)
 
 
 ###############
