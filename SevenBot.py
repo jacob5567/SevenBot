@@ -137,6 +137,7 @@ async def set_time_zone(ctx, user_zone):
 async def list_zones(ctx):
     await ctx.send("https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
 
+
 @bot.command(name="listuserzones", help="List all the users and their time zones, if set")
 async def list_user_zones(ctx):
     send_string = ""
@@ -150,6 +151,15 @@ async def list_user_zones(ctx):
     if(send_string):
         await ctx.send(send_string)
 
+
+@bot.command(name="savezonesdict", help="Save all user zones to a json file")
+@commands.has_role("Bot Admin")
+async def save_zones(ctx):
+    writeable_zones_dict = {key.id: value.zone for key, value in time_zones.items()}
+    json_text = json.dumps(writeable_zones_dict)
+    with open("zonesdict.json", 'w') as f:
+        f.write(json_text)
+    await ctx.send("Wrote JSON")
 
 ###############
 # VERSE STUFF #
