@@ -46,6 +46,10 @@ async def on_ready():
         f'{guild.name} (id: {guild.id})'
     )
 
+######################
+# SUNDAY THEME STUFF #
+######################
+
 
 @bot.command(name="setsundaytheme", help="Sets the theme for Random-Theme Sunday!")
 @commands.has_role("Bot Admin")
@@ -110,18 +114,33 @@ async def refresh_scheduled_messages():
     scheduler.add_job(sendRandomThemeMessage, 'cron',
                       day_of_week="sun", hour=11)
 
+###############
+# VERSE STUFF #
+###############
+
 
 @bot.command(name="verse", help="Responds with the selected Bible verse")
 async def get_verse(ctx):
     await ctx.send("Not yet implemented.")
 
+#########
+# LINKS #
+#########
+
+
 @bot.command(name="repository", help="The code repository for this bot")
 async def get_repo_link(ctx):
     await ctx.send("https://github.com/jacob5567/SevenBot")
 
+
 @bot.command(name="musicmonday", help="Spotify playlist of Music Monday songs")
 async def get_monday_playlist(ctx):
     await ctx.send("https://open.spotify.com/playlist/1N4lnBTUPDlsUhgnob2vxq?si=ZVWLYto5S8q6Y6Ex-1NyMw")
+
+##############
+# ON MESSAGE #
+##############
+
 
 @bot.event
 async def on_message(message):
