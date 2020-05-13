@@ -4,6 +4,8 @@ import os
 import io
 import random
 import discord
+from datetime import datetime
+import pytz
 from discord.ext import commands
 import json
 from dotenv import load_dotenv
@@ -32,6 +34,7 @@ async def sendRandomThemeMessage():
 
 bot = commands.Bot(command_prefix='!')
 scheduler = AsyncIOScheduler()
+time_zones = {}
 
 
 @bot.event
@@ -113,6 +116,27 @@ async def refresh_scheduled_messages():
     f.close()
     scheduler.add_job(sendRandomThemeMessage, 'cron',
                       day_of_week="sun", hour=11)
+
+###################
+# TIME ZONE STUFF #
+###################
+
+
+@bot.command(name="settimezone", help="Set your personal time zone")
+async def set_time_zone(ctx, zone):
+    try:
+        _ = pytz.timezone(zone)
+    except:
+        await ctx.send("`{}` is not a valid time zone".format(zone))
+    else:
+        time_zones[ctx.author] = zone
+        await ctx.send("{}'s time zone set to `{}`".format(ctx.author, zone))
+
+
+@bot.command(name="listtimezones", help="List all time zones")
+async def list_zones(ctx):
+    await ctx.send("https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
+
 
 ###############
 # VERSE STUFF #
