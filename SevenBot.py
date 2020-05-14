@@ -48,7 +48,7 @@ async def on_ready():
     if os.path.exists("zonesdict.json"):
         f = open("zonesdict.json", 'r')
         time_zones_loaded = json.load(f)
-        time_zones = {bot.get_user(int(key)): pytz.timezone(
+        time_zones = {int(key): pytz.timezone(
             value) for key, value in time_zones_loaded.items()}
         f.close()
 
@@ -142,17 +142,16 @@ async def process_time_zones(message):
         elif regex_results[3].lower() == 'am':
             if hour == '12':
                 hour = '0'
-        found_time = datetime.time(hour=int(hour), minute=int(
-            regex_results[2][1:] if ':' in regex_results[0] else 0), tzinfo=time_zones.get(message.author, pytz.timezone(os.getenv("TZ"))))
         today = datetime.date.today()
         found_datetime = datetime.datetime(
-            year=today.year, month=today.month, day=today.day, hour=found_time.hour, minute=found_time.minute)
+            year=today.year, month=today.month, day=today.day, hour=int(hour), minute=int(
+                regex_results[2][1:] if ':' in regex_results[0] else 0))
 
         ouput_format = "%-I:%M%p"
         send_string = ""
         for tz in set(time_zones.values()):
-            send_string += tz.zone + ": " + \
-                found_datetime.astimezone(tz).strftime(ouput_format) + '\n'
+            send_string += tz.zone + ": " + time_zones.get(message.author.id, pytz.timezone(
+                os.getenv("TZ"))).localize(found_datetime).astimezone(tz).strftime(ouput_format) + '\n'
         await message.channel.send(send_string)
 
 
@@ -163,11 +162,11 @@ async def set_time_zone(ctx, user_zone):
     except:
         await ctx.send("`{}` is not a valid time zone".format(user_zone))
     else:
-        time_zones[ctx.author] = pytz.timezone(user_zone)
+        time_zones[ctx.author.id] = pytz.timezone(user_zone)
         await ctx.send("{}'s time zone set to `{}`".format(ctx.author, user_zone))
         # write to file
         writeable_zones_dict = {
-            key.id: value.zone for key, value in time_zones.items()}
+            str(key): value.zone for key, value in time_zones.items()}
         json_text = json.dumps(writeable_zones_dict)
         with open("zonesdict.json", 'w') as f:
             f.write(json_text)
@@ -175,21 +174,20 @@ async def set_time_zone(ctx, user_zone):
 
 @bot.command(name="timezones", help="List all time zones")
 async def list_zones(ctx):
-    await ctx.send("https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
+    await ctx.send("<https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>")
 
 
 @bot.command(name="mytimezone", help="View your personal time zone")
 async def user_time_zone(ctx):
-    await ctx.send(time_zones[ctx.author])
+    await ctx.send(time_zones[ctx.author.id])
 
 
 @bot.command(name="listuserzones", help="List all the users and their time zones, if set")
+@commands.has_role("Bot Admin")
 async def list_user_zones(ctx):
     send_string = ""
     for key, value in time_zones.items():
-        send_string += str(key.name)
-        send_string += '#'
-        send_string += str(key.discriminator)
+        send_string += str(bot.get_user(key))
         send_string += ': '
         send_string += str(value.zone)
         send_string += '\n'
@@ -201,7 +199,7 @@ async def list_user_zones(ctx):
 @commands.has_role("Bot Admin")
 async def save_zones(ctx):
     writeable_zones_dict = {
-        key.id: value.zone for key, value in time_zones.items()}
+        key: value.zone for key, value in time_zones.items()}
     json_text = json.dumps(writeable_zones_dict)
     with open("zonesdict.json", 'w') as f:
         f.write(json_text)
