@@ -2,6 +2,7 @@
 
 import os
 import io
+import re
 import random
 import discord
 from datetime import datetime
@@ -46,7 +47,8 @@ async def on_ready():
 
     f = open("zonesdict.json")
     time_zones_loaded = json.load(f)
-    time_zones = {bot.get_user(int(key)):pytz.timezone(value) for key, value in time_zones_loaded.items()}
+    time_zones = {bot.get_user(int(key)): pytz.timezone(
+        value) for key, value in time_zones_loaded.items()}
     f.close()
 
     guild = discord.utils.get(bot.guilds, name=GUILD)
@@ -128,6 +130,13 @@ async def refresh_scheduled_messages():
 ###################
 
 
+async def process_time_zones(message):
+    text = message.content
+    date_regex = re.compile(r"(1[0-2]|[1-9])(:[0-5][0-9])? ?[paPA][mM]")
+    if date_regex.search(text):
+        await message.channel.send("Found a date")
+
+
 @bot.command(name="settimezone", help="Set your personal time zone")
 async def set_time_zone(ctx, user_zone):
     try:
@@ -138,7 +147,8 @@ async def set_time_zone(ctx, user_zone):
         time_zones[ctx.author] = pytz.timezone(user_zone)
         await ctx.send("{}'s time zone set to `{}`".format(ctx.author, user_zone))
         # write to file
-        writeable_zones_dict = {key.id: value.zone for key, value in time_zones.items()}
+        writeable_zones_dict = {
+            key.id: value.zone for key, value in time_zones.items()}
         json_text = json.dumps(writeable_zones_dict)
         with open("zonesdict.json", 'w') as f:
             f.write(json_text)
@@ -162,10 +172,12 @@ async def list_user_zones(ctx):
     if(send_string):
         await ctx.send(send_string)
 
+
 @bot.command(name="savezonesdict", help="Save all user zones to a json file")
 @commands.has_role("Bot Admin")
 async def save_zones(ctx):
-    writeable_zones_dict = {key.id: value.zone for key, value in time_zones.items()}
+    writeable_zones_dict = {
+        key.id: value.zone for key, value in time_zones.items()}
     json_text = json.dumps(writeable_zones_dict)
     with open("zonesdict.json", 'w') as f:
         f.write(json_text)
@@ -203,6 +215,8 @@ async def get_monday_playlist(ctx):
 async def on_message(message):
     if message.author == bot.user:
         return
+
+    await process_time_zones(message)
 
     if "hello there" in message.content.lower():
         response = "General Kenobi!"
