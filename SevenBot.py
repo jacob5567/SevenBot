@@ -5,7 +5,7 @@ import io
 import re
 import random
 import discord
-from datetime import time
+import datetime
 import pytz
 from discord.ext import commands
 import json
@@ -45,11 +45,12 @@ async def on_ready():
 
     scheduler.start()
 
-    f = open("zonesdict.json")
-    time_zones_loaded = json.load(f)
-    time_zones = {bot.get_user(int(key)): pytz.timezone(
-        value) for key, value in time_zones_loaded.items()}
-    f.close()
+    if os.path.exists("zonesdict.json"):
+        f = open("zonesdict.json", 'r')
+        time_zones_loaded = json.load(f)
+        time_zones = {bot.get_user(int(key)): pytz.timezone(
+            value) for key, value in time_zones_loaded.items()}
+        f.close()
 
     guild = discord.utils.get(bot.guilds, name=GUILD)
     print(
@@ -141,8 +142,18 @@ async def process_time_zones(message):
         elif regex_results[3].lower() == 'am':
             if hour == '12':
                 hour = '0'
-        found_time = time(hour=int(hour), minute=int(regex_results[2][1:] if ':' in regex_results[0] else 0))
-        await message.channel.send(str(found_time))
+        found_time = datetime.time(hour=int(hour), minute=int(
+            regex_results[2][1:] if ':' in regex_results[0] else 0), tzinfo=time_zones.get(message.author, pytz.timezone(os.getenv("TZ"))))
+        today = datetime.date.today()
+        found_datetime = datetime.datetime(
+            year=today.year, month=today.month, day=today.day, hour=found_time.hour, minute=found_time.minute)
+
+        ouput_format = "%-I:%M%p"
+        send_string = ""
+        for tz in set(time_zones.values()):
+            send_string += tz.zone + ": " + \
+                found_datetime.astimezone(tz).strftime(ouput_format) + '\n'
+        await message.channel.send(send_string)
 
 
 @bot.command(name="settimezone", help="Set your personal time zone")
@@ -165,6 +176,11 @@ async def set_time_zone(ctx, user_zone):
 @bot.command(name="timezones", help="List all time zones")
 async def list_zones(ctx):
     await ctx.send("https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
+
+
+@bot.command(name="mytimezone", help="View your personal time zone")
+async def user_time_zone(ctx):
+    await ctx.send(time_zones[ctx.author])
 
 
 @bot.command(name="listuserzones", help="List all the users and their time zones, if set")
