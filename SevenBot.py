@@ -5,7 +5,7 @@ import io
 import re
 import random
 import discord
-from datetime import datetime
+from datetime import time
 import pytz
 from discord.ext import commands
 import json
@@ -132,9 +132,17 @@ async def refresh_scheduled_messages():
 
 async def process_time_zones(message):
     text = message.content
-    date_regex = re.compile(r"(1[0-2]|[1-9])(:[0-5][0-9])? ?[paPA][mM]")
-    if date_regex.search(text):
-        await message.channel.send("Found a date")
+    date_regex = re.compile(r"(1[0-2]|[1-9])(:[0-5][0-9])? ?([paPA][mM])")
+    if regex_results := date_regex.search(text):
+        hour = regex_results[1]
+        if regex_results[3].lower() == 'pm':
+            if hour != '12':
+                hour = str(int(hour) + 12)
+        elif regex_results[3].lower() == 'am':
+            if hour == '12':
+                hour = '0'
+        found_time = time(hour=int(hour), minute=int(regex_results[2][1:] if ':' in regex_results[0] else 0))
+        await message.channel.send(str(found_time))
 
 
 @bot.command(name="settimezone", help="Set your personal time zone")
