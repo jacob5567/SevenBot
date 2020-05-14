@@ -42,7 +42,8 @@ async def on_ready():
     await refresh_scheduled_messages()
 
     scheduler.start()
-
+    # TODO: read in time zones from file
+    # TODO: http://pytz.sourceforge.net/#tzinfo-api
     guild = discord.utils.get(bot.guilds, name=GUILD)
     print(
         f'{bot.user} is connected to the following guild:\n'
@@ -131,6 +132,11 @@ async def set_time_zone(ctx, user_zone):
     else:
         time_zones[ctx.author] = pytz.timezone(user_zone)
         await ctx.send("{}'s time zone set to `{}`".format(ctx.author, user_zone))
+        # write to file
+        writeable_zones_dict = {key.id: value.zone for key, value in time_zones.items()}
+        json_text = json.dumps(writeable_zones_dict)
+        with open("zonesdict.json", 'w') as f:
+            f.write(json_text)
 
 
 @bot.command(name="timezones", help="List all time zones")
@@ -151,7 +157,7 @@ async def list_user_zones(ctx):
     if(send_string):
         await ctx.send(send_string)
 
-
+# TODO: Write zones every time one is added
 @bot.command(name="savezonesdict", help="Save all user zones to a json file")
 @commands.has_role("Bot Admin")
 async def save_zones(ctx):
