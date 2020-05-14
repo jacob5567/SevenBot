@@ -39,11 +39,16 @@ time_zones = {}
 
 @bot.event
 async def on_ready():
+    global time_zones
     await refresh_scheduled_messages()
 
     scheduler.start()
-    # TODO: read in time zones from file
-    # TODO: http://pytz.sourceforge.net/#tzinfo-api
+
+    f = open("zonesdict.json")
+    time_zones_loaded = json.load(f)
+    time_zones = {bot.get_user(int(key)):pytz.timezone(value) for key, value in time_zones_loaded.items()}
+    f.close()
+
     guild = discord.utils.get(bot.guilds, name=GUILD)
     print(
         f'{bot.user} is connected to the following guild:\n'
@@ -157,7 +162,6 @@ async def list_user_zones(ctx):
     if(send_string):
         await ctx.send(send_string)
 
-# TODO: Write zones every time one is added
 @bot.command(name="savezonesdict", help="Save all user zones to a json file")
 @commands.has_role("Bot Admin")
 async def save_zones(ctx):
