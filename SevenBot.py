@@ -17,8 +17,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = os.getenv("DISCORD_GUILD")
 RANDOM_CHANNEL = os.getenv("RANDOM_CHANNEL")
 RANDOM_TEXT = os.getenv("RANDOM_TEXT")
-RANDOM_TOPICS = ["What hobbies have you been working on lately?",
-                 "Send your favorite meme!", "Send a selfie!", "Share a picture of a pet/other animal!"]
+RANDOM_TOPICS = ["What hobbies have you been working on lately?", "Send a selfie!", "Share a picture of a pet/other animal!"]
 random_message = None
 
 
@@ -59,41 +58,41 @@ async def on_ready():
     )
 
 ######################
-# SUNDAY THEME STUFF #
+# FRIDAY THEME STUFF #
 ######################
 
 
-@bot.command(name="setsundaytheme", help="Sets the theme for Random-Theme Sunday!")
+@bot.command(name="setfridaytheme", help="Sets the theme for Random-Theme Friday!")
 @commands.has_role("Bot Admin")
-async def set_sunday_theme(ctx, *, arg):
+async def set_friday_theme(ctx, *, arg):
     global random_message
     if random_message != None:
-        await ctx.send("The theme for this Sunday has already been set! Use `!changesundaytheme` to override!")
+        await ctx.send("The theme for this Friday has already been set! Use `!changefridaytheme` to override!")
     else:
         random_message = arg
-        await ctx.send("This Sunday's theme has been set to: `" + arg + "`")
+        await ctx.send("This Friday's theme has been set to: `" + arg + "`")
 
 
-@bot.command(name="sundaytheme", help="Replies with the theme for Random-Theme Sunday!")
+@bot.command(name="fridaytheme", help="Replies with the theme for Random-Theme Friday!")
 @commands.has_role("Bot Admin")
-async def get_sunday_theme(ctx):
+async def get_friday_theme(ctx):
     global random_message
     if random_message != None:
-        await ctx.send("This Sunday's theme will be: `" + random_message + "`")
+        await ctx.send("This Friday's theme will be: `" + random_message + "`")
     else:
-        await ctx.send("This Sunday's theme has not been set! Use `!setsundaytheme` to set it!")
+        await ctx.send("This Friday's theme has not been set! Use `!setfridaytheme` to set it!")
 
 
-@bot.command(name="changesundaytheme", help="Changes the theme for Random-Theme Sunday!")
+@bot.command(name="changefridaytheme", help="Changes the theme for Random-Theme Friday!")
 @commands.has_role("Bot Admin")
-async def change_sunday_theme(ctx, *, arg):
+async def change_friday_theme(ctx, *, arg):
     global random_message
     if random_message == None:
-        await ctx.send("The theme for this Sunday not yet been set! Use `!setsundaytheme` to set it!")
+        await ctx.send("The theme for this Friday not yet been set! Use `!setfridaytheme` to set it!")
     else:
         temp = random_message
         random_message = arg
-        await ctx.send("This Sunday's theme has been changed from `" + temp + "` to `" + arg + "`.")
+        await ctx.send("This Friday's theme has been changed from `" + temp + "` to `" + arg + "`.")
 
 
 @bot.command(name="refresh", help="Refreshes all scheduled messages")
@@ -124,7 +123,7 @@ async def refresh_scheduled_messages():
 
     f.close()
     scheduler.add_job(sendRandomThemeMessage, 'cron',
-                      day_of_week="sun", hour=11)
+                      day_of_week="fri", hour=11)
 
 ###################
 # TIME ZONE STUFF #
