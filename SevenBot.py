@@ -241,8 +241,8 @@ async def on_message(message):
 
     await process_time_zones(message)
 
-    if "hello there" in message.content.lower():
-        response = "General Kenobi!"
+    if "scissors autumn" in message.content.lower():
+        response = "https://cdn.discordapp.com/attachments/689717787890810880/742982616851939358/scissors_autumn.jpg!"
         await message.channel.send(response)
 
     await bot.process_commands(message)
