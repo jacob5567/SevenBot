@@ -23,6 +23,7 @@ TZCONVERSION = config["features"]["timeZoneConversion"]
 COMMAND_PREFIX = config["commandPrefix"]
 
 bot = commands.Bot(command_prefix=COMMAND_PREFIX)
+bot.remove_command("help")
 scheduler = AsyncIOScheduler(timezone=TZ)
 time_zones = {}
 
@@ -34,7 +35,7 @@ async def on_ready():
     scheduler.start()
 
     if os.path.exists("zonesdict.json"):
-        f = open("zonesdict.json", 'r')
+        f = open("zonesdict.json", "r")
         time_zones_loaded = json.load(f)
         time_zones = {int(key): pytz.timezone(
             value) for key, value in time_zones_loaded.items()}
@@ -42,8 +43,8 @@ async def on_ready():
 
     guild = discord.utils.get(bot.guilds, name=GUILD)
     print(
-        f'{bot.user} is connected to the following guild:\n'
-        f'{guild.name} (id: {guild.id})'
+        f"{bot.user} is connected to the following guild:\n"
+        f"{guild.name} (id: {guild.id})"
     )
 
 
@@ -79,7 +80,7 @@ async def refresh_scheduled_messages():
     message_info = json.load(f)
 
     for msg in message_info["scheduled_messages"]:
-        scheduler.add_job(send_message, 'cron', args=[
+        scheduler.add_job(send_message, "cron", args=[
             msg["channel_id"], msg["message_body"]], day_of_week=msg["day_of_week"], hour=msg["hour"], minute=msg["minute"])
 
     f.close()
@@ -95,22 +96,22 @@ async def process_time_zones(message):
     if date_regex.search(text):
         regex_results = date_regex.search(text)
         hour = regex_results[1]
-        if regex_results[3].lower() == 'pm':
-            if hour != '12':
+        if regex_results[3].lower() == "pm":
+            if hour != "12":
                 hour = str(int(hour) + 12)
-        elif regex_results[3].lower() == 'am':
-            if hour == '12':
-                hour = '0'
+        elif regex_results[3].lower() == "am":
+            if hour == "12":
+                hour = "0"
         today = datetime.date.today()
         found_datetime = datetime.datetime(
             year=today.year, month=today.month, day=today.day, hour=int(hour), minute=int(
-                regex_results[2][1:] if ':' in regex_results[0] else 0))
+                regex_results[2][1:] if ":" in regex_results[0] else 0))
 
         ouput_format = "%-I:%M%p"
         send_string = ""
         for tz in set(time_zones.values()):
             send_string += tz.zone + ": " + time_zones.get(message.author.id, pytz.timezone(
-                TZ)).localize(found_datetime).astimezone(tz).strftime(ouput_format) + '\n'
+                TZ)).localize(found_datetime).astimezone(tz).strftime(ouput_format) + "\n"
         await message.channel.send(send_string)
 
 
@@ -127,7 +128,7 @@ async def set_time_zone(ctx, user_zone):
         writeable_zones_dict = {
             str(key): value.zone for key, value in time_zones.items()}
         json_text = json.dumps(writeable_zones_dict)
-        with open("zonesdict.json", 'w') as f:
+        with open("zonesdict.json", "w") as f:
             f.write(json_text)
 
 
@@ -147,9 +148,9 @@ async def list_user_zones(ctx):
     send_string = ""
     for key, value in time_zones.items():
         send_string += str(bot.get_user(key))
-        send_string += ': '
+        send_string += ": "
         send_string += str(value.zone)
-        send_string += '\n'
+        send_string += "\n"
     if(send_string):
         await ctx.send(send_string)
 
@@ -160,7 +161,7 @@ async def save_zones(ctx):
     writeable_zones_dict = {
         key: value.zone for key, value in time_zones.items()}
     json_text = json.dumps(writeable_zones_dict)
-    with open("zonesdict.json", 'w') as f:
+    with open("zonesdict.json", "w") as f:
         f.write(json_text)
     await ctx.send("Wrote JSON")
 
