@@ -23,23 +23,26 @@ TZCONVERSION = config["features"]["timeZoneConversion"]
 COMMAND_PREFIX = config["commandPrefix"]
 
 bot = commands.Bot(command_prefix=COMMAND_PREFIX)
-bot.remove_command("help")
-scheduler = AsyncIOScheduler(timezone=TZ)
-time_zones = {}
+if SCHEDULING:
+    scheduler = AsyncIOScheduler(timezone=TZ)
+if TZCONVERSION:
+    time_zones = {}
 
 
 @bot.event
 async def on_ready():
     global time_zones
-    await refresh_scheduled_messages()
-    scheduler.start()
+    if SCHEDULING:
+        await refresh_scheduled_messages()
+        scheduler.start()
 
-    if os.path.exists("zonesdict.json"):
-        f = open("zonesdict.json", "r")
-        time_zones_loaded = json.load(f)
-        time_zones = {int(key): pytz.timezone(
-            value) for key, value in time_zones_loaded.items()}
-        f.close()
+    if TZCONVERSION:
+        if os.path.exists("zonesdict.json"):
+            f = open("zonesdict.json", "r")
+            time_zones_loaded = json.load(f)
+            time_zones = {int(key): pytz.timezone(
+                value) for key, value in time_zones_loaded.items()}
+            f.close()
 
     guild = discord.utils.get(bot.guilds, name=GUILD)
     print(
@@ -51,6 +54,7 @@ async def on_ready():
 async def send_message(channel_id, message_body):
     channel = await bot.fetch_channel(channel_id)
     await channel.send(message_body)
+
 
 ##############
 # SCHEDULING #
@@ -151,7 +155,7 @@ async def list_user_zones(ctx):
         send_string += ": "
         send_string += str(value.zone)
         send_string += "\n"
-    if(send_string):
+    if send_string:
         await ctx.send(send_string)
 
 
@@ -185,12 +189,23 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    await process_time_zones(message)
+    if TZCONVERSION:
+        await process_time_zones(message)
 
     if "scissors autumn" in message.content.lower():
         response = "https://cdn.discordapp.com/attachments/689717787890810880/742982616851939358/scissors_autumn.jpg"
         await message.channel.send(response)
 
     await bot.process_commands(message)
+
+if not SCHEDULING:
+    bot.remove_command("refresh")
+    bot.remove_command("listschedule")
+if not TZCONVERSION:
+    bot.remove_command("settimezone")
+    bot.remove_command("timezones")
+    bot.remove_command("mytimezone")
+    bot.remove_command("listuserzones")
+    bot.remove_command("savezonesdict")
 
 bot.run(TOKEN)
