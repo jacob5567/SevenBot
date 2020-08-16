@@ -183,20 +183,27 @@ async def get_repo_link(ctx):
 # ON MESSAGE #
 ##############
 
+async def process_responses(message):
+    with open("responses.json", "r") as f:
+        responses = json.load(f)["responses"]
+    for response in responses:
+        if response["caseSensitive"]:
+            if response["prompt"] in message.content:
+                await message.channel.send(response["response"])
+        else:
+            if response["prompt"].lower() in message.content.lower():
+                await message.channel.send(response["response"])
+
 
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
-
     if TZCONVERSION:
         await process_time_zones(message)
-
-    if "scissors autumn" in message.content.lower():
-        response = "https://cdn.discordapp.com/attachments/689717787890810880/742982616851939358/scissors_autumn.jpg"
-        await message.channel.send(response)
-
+    await process_responses(message)
     await bot.process_commands(message)
+
 
 if not SCHEDULING:
     bot.remove_command("refresh")
