@@ -9,31 +9,21 @@ import datetime
 import pytz
 from discord.ext import commands
 import json
-from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD = os.getenv("DISCORD_GUILD")
-RANDOM_CHANNEL = os.getenv("RANDOM_CHANNEL")
-RANDOM_TEXT = os.getenv("RANDOM_TEXT")
-RANDOM_TOPICS = ["What hobbies have you been working on lately?", "Send a selfie!", "Share a picture of a pet/other animal!"]
-random_message = None
 
+f = open("config.json", "r")
+config = json.load(f)
+f.close()
+TOKEN = config["DISCORD_TOKEN"]
+GUILD = config["DISCORD_GUILD"]
+TZ = config["timeZone"]
+SCHEDULING = config["features"]["scheduling"]
+TZCONVERSION = config["features"]["timeZoneConversion"]
+COMMAND_PREFIX = config["commandPrefix"]
 
-async def sendMessage(channel_id, message_body):
-    channel = await bot.fetch_channel(channel_id)
-    await channel.send(message_body)
-
-
-async def sendRandomThemeMessage():
-    global random_message
-    channel = await bot.fetch_channel(RANDOM_CHANNEL)
-    await channel.send(RANDOM_TEXT + " *" + (random.choice(RANDOM_TOPICS) if random_message == None else random_message) + "*")
-    random_message = None
-
-bot = commands.Bot(command_prefix='!')
-scheduler = AsyncIOScheduler()
+bot = commands.Bot(command_prefix=COMMAND_PREFIX)
+scheduler = AsyncIOScheduler(timezone=TZ)
 time_zones = {}
 
 
@@ -41,7 +31,6 @@ time_zones = {}
 async def on_ready():
     global time_zones
     await refresh_scheduled_messages()
-
     scheduler.start()
 
     if os.path.exists("zonesdict.json"):
@@ -57,42 +46,14 @@ async def on_ready():
         f'{guild.name} (id: {guild.id})'
     )
 
-######################
-# FRIDAY THEME STUFF #
-######################
 
+async def send_message(channel_id, message_body):
+    channel = await bot.fetch_channel(channel_id)
+    await channel.send(message_body)
 
-@bot.command(name="setfridaytheme", help="Sets the theme for Random-Theme Friday!")
-@commands.has_role("Bot Admin")
-async def set_friday_theme(ctx, *, arg):
-    global random_message
-    if random_message != None:
-        await ctx.send("The theme for this Friday has already been set! Use `!changefridaytheme` to override!")
-    else:
-        random_message = arg
-        await ctx.send("This Friday's theme has been set to: `" + arg + "`")
-
-
-@bot.command(name="fridaytheme", help="Replies with the theme for Random-Theme Friday!")
-@commands.has_role("Bot Admin")
-async def get_friday_theme(ctx):
-    global random_message
-    if random_message != None:
-        await ctx.send("This Friday's theme will be: `" + random_message + "`")
-    else:
-        await ctx.send("This Friday's theme has not been set! Use `!setfridaytheme` to set it!")
-
-
-@bot.command(name="changefridaytheme", help="Changes the theme for Random-Theme Friday!")
-@commands.has_role("Bot Admin")
-async def change_friday_theme(ctx, *, arg):
-    global random_message
-    if random_message == None:
-        await ctx.send("The theme for this Friday not yet been set! Use `!setfridaytheme` to set it!")
-    else:
-        temp = random_message
-        random_message = arg
-        await ctx.send("This Friday's theme has been changed from `" + temp + "` to `" + arg + "`.")
+##############
+# SCHEDULING #
+##############
 
 
 @bot.command(name="refresh", help="Refreshes all scheduled messages")
@@ -118,17 +79,15 @@ async def refresh_scheduled_messages():
     message_info = json.load(f)
 
     for msg in message_info["scheduled_messages"]:
-        scheduler.add_job(sendMessage, 'cron', args=[
-                          msg["channel_id"], msg["message_body"]], day_of_week=msg["day_of_week"], hour=msg["hour"], minute=msg["minute"])
+        scheduler.add_job(send_message, 'cron', args=[
+            msg["channel_id"], msg["message_body"]], day_of_week=msg["day_of_week"], hour=msg["hour"], minute=msg["minute"])
 
     f.close()
-    scheduler.add_job(sendRandomThemeMessage, 'cron',
-                      day_of_week="fri", hour=11)
+
 
 ###################
 # TIME ZONE STUFF #
 ###################
-
 
 async def process_time_zones(message):
     text = message.content
@@ -151,7 +110,7 @@ async def process_time_zones(message):
         send_string = ""
         for tz in set(time_zones.values()):
             send_string += tz.zone + ": " + time_zones.get(message.author.id, pytz.timezone(
-                os.getenv("TZ"))).localize(found_datetime).astimezone(tz).strftime(ouput_format) + '\n'
+                TZ)).localize(found_datetime).astimezone(tz).strftime(ouput_format) + '\n'
         await message.channel.send(send_string)
 
 
@@ -205,15 +164,6 @@ async def save_zones(ctx):
         f.write(json_text)
     await ctx.send("Wrote JSON")
 
-###############
-# VERSE STUFF #
-###############
-
-
-@bot.command(name="verse", help="Responds with the selected Bible verse")
-async def get_verse(ctx):
-    await ctx.send("Not yet implemented.")
-
 #########
 # LINKS #
 #########
@@ -223,10 +173,6 @@ async def get_verse(ctx):
 async def get_repo_link(ctx):
     await ctx.send("https://github.com/jacob5567/SevenBot")
 
-
-@bot.command(name="musicmonday", help="Spotify playlist of Music Monday songs")
-async def get_monday_playlist(ctx):
-    await ctx.send("https://open.spotify.com/playlist/1N4lnBTUPDlsUhgnob2vxq?si=ZVWLYto5S8q6Y6Ex-1NyMw")
 
 ##############
 # ON MESSAGE #
@@ -245,6 +191,5 @@ async def on_message(message):
         await message.channel.send(response)
 
     await bot.process_commands(message)
-
 
 bot.run(TOKEN)

@@ -2,3 +2,5 @@
 messageinfo.json
 err.log
 zonesdict.json
+.vscode/
+config.json
